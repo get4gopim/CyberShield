@@ -15,6 +15,7 @@ public class LoggerParam {
 
     static final Predicate<CtElement> ctVarPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtVariableReadImpl");
     static final Predicate<CtElement> ctLiteralPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtLiteralImpl");
+    static final Predicate<CtElement> ctInvocationPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtInvocation");
 
     public LoggerParam() {}
 
