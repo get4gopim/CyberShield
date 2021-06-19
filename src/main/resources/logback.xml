@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+	<jmxConfigurator />
+	<include resource="org/springframework/boot/logging/logback/defaults.xml" />
+	<springProperty scope="context" name="springAppName" source="spring.application.name" />
+	<property name="PATTERN"
+		value="date=%date{ISO8601} severity=%-5level service=${springAppName:-} partnerId=%X{partnerId} walletId=%X{walletId} logger=%logger{36} message=%msg X-B3-TraceId=%X{X-B3-TraceId:-} X-B3-SpanId=%X{X-B3-SpanId:-} pid=${PID:-} thread=%thread %n" />
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<logger name="com.example.test" level="INFO" additivity="false">
+		<appender-ref ref="CONSOLE" />
+	</logger>
+	<root level="INFO">
+		<appender-ref ref="CONSOLE" />
+	</root>
+</configuration>
