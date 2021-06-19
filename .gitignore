@@ -1,2 +1,7 @@
 # Project exclude paths
 /target/
+/CyberShield.iml
+
+*.iml
+/spooned-classes/
+/.idea/

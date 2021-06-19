@@ -25,6 +25,10 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
     private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, Header.class);
 
+    private final BiPredicate<List<CtParameter<?>>, CtElement> doesAnnotationParameterSanitize = (parametersList, ctElement) ->
+            parametersList.stream().anyMatch(ctTypeParameter -> ctTypeParameter.getReference().getSimpleName().equalsIgnoreCase(ctElement.prettyprint())
+                    && SPRING_PATTERN_LIST.stream().anyMatch(ctTypeParameter::hasAnnotation));
+
     @Override
     public boolean isToBeProcessed(CtMethod<?> element) {
         // System.out.println(element.getType());
@@ -36,6 +40,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
         // ModifierKind modifierKind = element.getModifiers().stream().findFirst().get();
         // System.out.println(modifierKind.toString() + " " + element.getSignature() + " " + element.getBody());
 
+        List<CtParameter<?>> ctTypeParameters = element.getParameters();
         List<CtStatement> statements = element.getBody().getStatements();
 
         Set<CtStatement> loggerStmts = statements.stream()
@@ -45,11 +50,19 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
                         .count() > 0)
                 .collect(Collectors.toSet());
 
-        loggerStmts.stream().forEach(x -> {
+       /* loggerStmts.stream().forEach(x -> {
             StringBuilder sb = new StringBuilder();
             LoggerStatement loggerStatement = getCtElements(x, sb);
             if (loggerStatement.isModificationNeeded()) x.replace(getModifiedLogSnippet(loggerStatement));
-        });
+        });*/
+
+        List<LoggerStatement> filteredLogStatements = new ArrayList<>();
+        for(CtStatement ctStatement:loggerStmts){
+            StringBuilder sb = new StringBuilder();
+            filteredLogStatements = getCTStatementsList(ctStatement, sb, ctTypeParameters);
+            filteredLogStatements.stream().filter(LoggerStatement::isModificationNeeded)
+                    .forEach(modifiedStatement->ctStatement.replace(getModifiedLogSnippet(modifiedStatement)));
+        }
 
         CtClass ctClass = element.getParent(CtClass.class);
         final CtMethod ctMethod = getSanitizeMethod();
@@ -97,12 +110,12 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
             }
 
             if (i > 1) {
-                if(LoggerParam.ctLiteralPredicate.test(ctElement)){
+                if(LoggerParam.ctLiteralPredicate.test(ctElement)) {
                     paramList.add(new LoggerParam(ctElement, false));
                 }
-                if(LoggerParam.ctVarPredicate.test(ctElement) && doesAnnotationParameterSanitize.test(ctParameters,ctElement)){
+                if (LoggerParam.ctVarPredicate.test(ctElement)) {
                     LOGGER.info("parameter {} should be sanitized",ctElement);
-                    paramList.add(new LoggerParam(ctElement, true));
+                    paramList.add(new LoggerParam(ctElement, doesAnnotationParameterSanitize.test(ctParameters, ctElement)));
                     loggerStatements.add(new LoggerStatement(sb,paramList,true));
                 }
 
@@ -162,8 +175,6 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
         return snippet;
     }
 
-    private final BiPredicate<List<CtParameter<?>>, CtElement> doesAnnotationParameterSanitize = (parametersList, ctElement)->
-            parametersList.stream().anyMatch(ctTypeParameter -> ctTypeParameter.getReference().getSimpleName().equalsIgnoreCase(ctElement.prettyprint())
-                    && SPRING_PATTERN_LIST.stream().anyMatch(ctTypeParameter::hasAnnotation));
+
 
 }

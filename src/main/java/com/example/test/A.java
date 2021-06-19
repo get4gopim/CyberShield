@@ -2,6 +2,7 @@ package com.example.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PathVariable;
 
 public class A {
 
@@ -26,7 +27,7 @@ public class A {
         a2();
     }
 
-    public void m1(String name, String value) {
+    public void m1(String name, @PathVariable String value) {
         int i = 10;
 
         new B().show(i);
