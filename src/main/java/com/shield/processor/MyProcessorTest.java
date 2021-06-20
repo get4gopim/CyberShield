@@ -1,4 +1,4 @@
-package com.example.test;
+package com.shield.processor;
 
 import spoon.Launcher;
 import spoon.compiler.Environment;
@@ -10,7 +10,7 @@ public class MyProcessorTest {
         final String[] args = {
                 "-i", "src/main/java/com/example/test/A.java",
                 "-o", "target/spooned/",
-                "-p", "com.example.test.MyProcessor",
+                "-p", "com.shield.processor.MyProcessor",
                 "--compile"
         };
 

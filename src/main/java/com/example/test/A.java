@@ -2,10 +2,12 @@ package com.example.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
 public class A {
@@ -17,6 +19,9 @@ public class A {
     public double f1;
     private boolean b1;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     protected void a1(int x) throws InterruptedException  {
         a2("", "");
         add(4);
@@ -27,7 +32,7 @@ public class A {
         return "" + i1;
     }
 
-    protected void a2(String name, String value) throws InterruptedException {
+    public void a2(String name, @RequestParam("strVal") String value) throws InterruptedException {
 
         LOGGER.info("");
         LOGGER.info("test");
@@ -52,17 +57,27 @@ public class A {
 
         LOGGER.info("Employee name : {}", emp.getName());
 
-        RestTemplate restTemplate = new RestTemplate();
         String fooResourceUrl = "https://www.google.co.in";
 
-        ResponseEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
+        //ResponseEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
+        //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class);
+        //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class, getRequestEntity());
+        ResponseEntity<Department> responseEntity = restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class);
+
+        LOGGER.info("restTemplate.body : {}", restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class));
+
+        LOGGER.info("resp : {}", responseEntity);
+
+        LOGGER.info("responseEntity.body.name : {}", responseEntity.getBody().getEmployee().getName());
+
         Department department = responseEntity.getBody();
+
 
         LOGGER.info("dep.emp.name : {}", department.getEmployee().getName());
 
         Employee employee = department.getEmployee();
 
-        LOGGER.info("emp.name : {}", employee.getName());
+        LOGGER.info("emp.name : {} {}", employee.getName(), department);
     }
 
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity() {
@@ -80,6 +95,13 @@ public class A {
 
     void m2(Object obj) {
         LOGGER.info("Hello m2 {]", obj);
+        /*
+
+         */
+
+        /*
+
+         */
     }
 
     private String escapeXml(Object inputParam) {

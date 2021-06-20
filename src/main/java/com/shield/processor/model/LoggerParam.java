@@ -1,4 +1,4 @@
-package com.example.test;
+package com.shield.processor.model;
 
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.declaration.CtElement;
@@ -13,9 +13,9 @@ public class LoggerParam {
     private boolean isVariable;
     private boolean isSanitizationNeeded;
 
-    static final Predicate<CtElement> ctVarPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtVariableReadImpl");
-    static final Predicate<CtElement> ctLiteralPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtLiteralImpl");
-    static final Predicate<CtElement> ctInvocationPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtInvocation");
+    public static final Predicate<CtElement> ctVarPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtVariableReadImpl");
+    public static final Predicate<CtElement> ctLiteralPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtLiteralImpl");
+    public static final Predicate<CtElement> ctInvocationPredicate = x -> x.getShortRepresentation().contains("spoon.support.reflect.code.CtInvocation");
 
     public LoggerParam() {}
 

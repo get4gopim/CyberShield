@@ -1,24 +1,22 @@
-package com.example.test;
+package com.shield.processor;
 
+import com.shield.processor.model.LoggerParam;
+import com.shield.processor.model.LoggerStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.Filter;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.support.reflect.code.CtLocalVariableImpl;
-import spoon.support.reflect.code.CtVariableReadImpl;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
@@ -27,7 +25,9 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MyProcessor.class);
 
-    private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, Header.class);
+    private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, RequestParam.class, Header.class);
+
+    private static final String RESP_ENTITY_REF_TYPE = "org.springframework.http.ResponseEntity";
 
     private final BiPredicate<List<CtParameter<?>>, CtElement> doesAnnotationParameterSanitize = (parametersList, ctElement) ->
             parametersList.stream().anyMatch(ctTypeParameter -> ctTypeParameter.getReference().getSimpleName().equalsIgnoreCase(ctElement.prettyprint())
@@ -89,33 +89,52 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
     }
 
     private boolean isResponseEntity(CtMethod<?> ctMethod, final String localVarName) {
-        System.out.println(" ************* Find Variable: "  + localVarName);
+        //System.out.println("Find Variable: { "  + localVarName + " }");
 
-        final String refType = "org.springframework.http.ResponseEntity";
-
+        // Find by methodParam tracking
         Optional<CtParameter<?>> optParamVariable = ctMethod.getParameters().stream()
                 .filter(x -> x.getReference().getSimpleName().equals(localVarName))
                 //.peek(x -> System.out.println(x.getReferencedTypes()))
-                .filter(x -> x.getReference().getReferencedTypes().stream().anyMatch(y -> y.getQualifiedName().equals(refType)))
+                .filter(x -> x.getReference().getReferencedTypes().stream().anyMatch(y -> y.getQualifiedName().equals(RESP_ENTITY_REF_TYPE)))
                 .findFirst();
                 //.forEach(x -> System.out.println(x.getReference().getSimpleName()));
 
-        if (optParamVariable.isPresent()) return true;
+        if (optParamVariable.isPresent()) {
+            //LOGGER.info("{} foundBy methodParam@1", localVarName);
+            return true;
+        }
 
+        // Find by localVariable tracking
         List<CtLocalVariable> methodLocalVariables = ctMethod.getBody().getElements(new TypeFilter(CtLocalVariable.class));
 
         CtLocalVariable ctLocalVariable = methodLocalVariables.stream()
-                .filter(x -> x.getSimpleName().equals(localVarName)).findFirst().orElse(null);
+                //.peek(x -> System.out.println(x.getReference()))
+                .filter(x -> x.getSimpleName().equals(localVarName))
+                //.peek(x -> System.out.println(x.getReferencedTypes()))
+                .findFirst().orElse(null);
 
         if (ctLocalVariable == null) return false;
 
+        var ctRefType = ctLocalVariable.getReferencedTypes()
+                .stream()
+                .filter(x -> x.getQualifiedName().equals(RESP_ENTITY_REF_TYPE))
+                .findFirst();
+
+        if (ctRefType.isPresent()) {
+            //LOGGER.info("{} foundBy methodLocalVariable@1", localVarName);
+            return true;
+        }
+
+        // Found by expression back tracking
         var ctTypeReference = ctLocalVariable.getDefaultExpression()
-                .getReferencedTypes().stream().filter(y -> y.getQualifiedName().equals(refType))
+                .getReferencedTypes().stream().filter(y -> y.getQualifiedName().equals(RESP_ENTITY_REF_TYPE))
                 .findFirst();
 
         if (ctTypeReference.isPresent()) {
+            //LOGGER.info("{} foundBy methodLocalDefaultExp@1", localVarName);
             return true;
         } else {
+            //System.out.println("recursion methodLocalDefaultExp@2 : " + localVarName);
             //if (ctLocalVariable.getAssignment().getDirectChildren().size() > 1) {
                 var abc = ctLocalVariable.getAssignment().getDirectChildren().get(0);
                 return isResponseEntity(ctMethod, abc.prettyprint());
@@ -147,10 +166,12 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
                 if (LoggerParam.ctVarPredicate.test(ctElement)) {
                     isStmtModified = doesAnnotationParameterSanitize.test(ctMethodParams, ctElement);
                     //LOGGER.info("{} annotation : {}", ctElement, ctElement.hasAnnotation(PathVariable.class));
+                    if (!isStmtModified) isStmtModified = isResponseEntity (ctStatement.getParent(CtMethod.class), ctElement.prettyprint());
                     paramList.add(new LoggerParam(ctElement, isStmtModified));
                 }
                 if (LoggerParam.ctInvocationPredicate.test(ctElement)) {
-                    LOGGER.info("ctInvocationPredicate : {}", ctElement.getElements(new TypeFilter(CtVariableRead.class)));
+                    //LOGGER.info("ctElement : {} ", ctElement);
+                    //LOGGER.info("ctInvocationPredicate : {}", ctElement.getElements(new TypeFilter(CtVariableRead.class)));
                     //LOGGER.info(" {} ", ctStatement.getParent(CtMethod.class));
                     String variableName = ctElement.getElements(new TypeFilter(CtVariableRead.class)).get(0).toString();
                     isStmtModified = isResponseEntity (ctStatement.getParent(CtMethod.class), variableName);
@@ -174,7 +195,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
             for (LoggerParam logStmt : paramList) {
                 CtElement ctParam = logStmt.getCtElement();
                 String paramName = ctParam.prettyprint();
-
+                //System.out.println("paramName sanitize : " + paramName);
                 if (logStmt.isSanitizationNeeded() ) { // && logStmt.isVariable()
                     paramName = SANITIZE_FN_NAME + "(" + ctParam.prettyprint() + ")";
                 }

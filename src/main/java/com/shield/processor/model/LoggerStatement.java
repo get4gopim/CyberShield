@@ -1,4 +1,4 @@
-package com.example.test;
+package com.shield.processor.model;
 
 import java.util.List;
 
