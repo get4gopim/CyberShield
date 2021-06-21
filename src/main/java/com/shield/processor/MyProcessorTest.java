@@ -8,10 +8,10 @@ public class MyProcessorTest {
 
     public static void main(String[] arg) {
         final String[] args = {
-                "-i", "src/main/java/com/example/test/A.java",
-                "-o", "target/spooned/",
-                "-p", "com.shield.processor.MyProcessor",
-                "--compile"
+                "-i", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/com/fdc/ucom/customer/endpoint/CustomController.java",
+                "-o", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/",
+                "-p", "com.shield.processor.MyProcessor"//,
+                //"--compile"
         };
 
         final Launcher launcher = new Launcher();

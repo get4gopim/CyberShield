@@ -62,7 +62,8 @@ public class A {
 
         String fooResourceUrl = "https://www.google.co.in";
 
-        ResponseEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
+        LOGGER.info("fooResourceUrl : {}", fooResourceUrl);
+        HttpEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
         //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class);
         //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class, getRequestEntity());
         //ResponseEntity<Department> responseEntity = restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class);

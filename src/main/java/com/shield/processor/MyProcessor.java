@@ -5,6 +5,7 @@ import com.shield.processor.model.LoggerStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -17,6 +18,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
@@ -25,9 +27,13 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MyProcessor.class);
 
-    private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, RequestParam.class, Header.class);
+    private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, RequestParam.class, Header.class, Payload.class);
 
     private static final String RESP_ENTITY_REF_TYPE = "org.springframework.http.ResponseEntity";
+
+    private static final List<String> RESP_ENTITY_LIST = Arrays.asList("org.springframework.http.ResponseEntity", "org.springframework.http.HttpEntity");
+
+    private static final List<String> VAR_NAME_URL_PATTERN = Arrays.asList("url", "endpoint");
 
     @Override
     public boolean isToBeProcessed(CtMethod<?> element) {
@@ -65,8 +71,30 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
         // System.out.println(ctClass);
     }
 
+    /**
+     * This method locate the particular logParam name needs sanitization or not. logParam -
+     *      1. Is part of method parameters and matches annotation
+     *      2. Is ReponseEntity reference from method Param
+     *      3. Is ReponseEntity reference from local variable
+     *      4. Is ReponseEntity reference from expression (back tracking)
+     *
+     * @param ctMethod
+     * @param localVarName
+     * @return
+     */
     private boolean doesSanitizationRequired(CtMethod<?> ctMethod, final String localVarName) {
         //System.out.println("Find Variable: { "  + localVarName + " }");
+
+        // Variable name pattern URL
+        Optional<String> optVarPattern = VAR_NAME_URL_PATTERN.stream()
+                .filter(x -> localVarName.toLowerCase().startsWith(x) || localVarName.toLowerCase().endsWith(x))
+                .findFirst();
+        if (optVarPattern.isPresent()) {
+            //LOGGER.info("{} foundBy varNamePattern@1", localVarName);
+            return true;
+        }
+
+        Predicate<CtTypeReference<?>> typePatternPredicate = x -> RESP_ENTITY_LIST.stream().anyMatch(cls -> x.getQualifiedName().equals(cls));
 
         // Find by methodParam annotation
         BiPredicate<List<CtParameter<?>>, String> doesAnnotationParameterSanitize = (parametersList, varName) ->
@@ -81,7 +109,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
         Optional<CtParameter<?>> optParamVariable = ctMethod.getParameters().stream()
                 .filter(x -> x.getReference().getSimpleName().equals(localVarName))
                 //.peek(x -> System.out.println(x.getReferencedTypes()))
-                .filter(x -> x.getReference().getReferencedTypes().stream().anyMatch(y -> y.getQualifiedName().equals(RESP_ENTITY_REF_TYPE)))
+                .filter(x -> x.getReference().getReferencedTypes().stream().anyMatch(typePatternPredicate))
                 .findFirst();
                 //.forEach(x -> System.out.println(x.getReference().getSimpleName()));
 
@@ -103,7 +131,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
         var ctRefType = ctLocalVariable.getReferencedTypes()
                 .stream()
-                .filter(x -> x.getQualifiedName().equals(RESP_ENTITY_REF_TYPE))
+                .filter(typePatternPredicate)
                 .findFirst();
 
         if (ctRefType.isPresent()) {
@@ -113,7 +141,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
         // Found by expression back tracking
         var ctTypeReference = ctLocalVariable.getDefaultExpression()
-                .getReferencedTypes().stream().filter(y -> y.getQualifiedName().equals(RESP_ENTITY_REF_TYPE))
+                .getReferencedTypes().stream().filter(typePatternPredicate)
                 .findFirst();
 
         if (ctTypeReference.isPresent()) {
@@ -215,7 +243,7 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
     }
 
     private CtMethod getSanitizeMethod() {
-        final CtCodeSnippetStatement statementInConstructor = getFactory().Code().createCodeSnippetStatement("return inputParam.toString()");
+        final CtCodeSnippetStatement statementInConstructor = getFactory().Code().createCodeSnippetStatement("return CrLfMasker.crLfMask((String) inputParam)");
         final CtBlock<?> ctBlockOfConstructor = getFactory().Code().createCtBlock(statementInConstructor);
         final CtParameter parameter = getFactory().Core().createParameter();
         final CtTypeReference<Object> objRef = getFactory().Code().createCtTypeReference(Object.class);
