@@ -43,7 +43,7 @@ public class A {
         LOGGER.info("Hello m1 param1 : {} param 2: {}", name, value);
     }
 
-    public void m1(String name, @PathVariable String value, ResponseEntity<Department> empRespEntity) {
+    public void m1(String name, @PathVariable Department value, ResponseEntity<Department> empRespEntity) {
         int i = 10;
 
         while (i < 4) {
@@ -52,32 +52,27 @@ public class A {
 
         LOGGER.info(escapeXml(name));
 
+        Employee emp1 = value.getEmployee();
+        LOGGER.info("Employee name : {} {}", value, emp1.getName());
+
         Department dep = empRespEntity.getBody();
         Employee emp = dep.getEmployee();
 
-        LOGGER.info("Employee name : {}", emp.getName());
+        LOGGER.info("Employee name : {}", empRespEntity, dep, emp.getName());
 
         String fooResourceUrl = "https://www.google.co.in";
 
-        //ResponseEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
+        ResponseEntity<Department> responseEntity = restTemplate.exchange(fooResourceUrl, HttpMethod.GET, getRequestEntity(), Department.class);
         //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class);
         //ResponseEntity<Department> responseEntity = restTemplate.getForEntity(fooResourceUrl, Department.class, getRequestEntity());
-        ResponseEntity<Department> responseEntity = restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class);
-
-        LOGGER.info("restTemplate.body : {}", restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class));
-
-        LOGGER.info("resp : {}", responseEntity);
-
-        LOGGER.info("responseEntity.body.name : {}", responseEntity.getBody().getEmployee().getName());
+        //ResponseEntity<Department> responseEntity = restTemplate.postForEntity(fooResourceUrl, getRequestEntity(), Department.class);
 
         Department department = responseEntity.getBody();
-
-
-        LOGGER.info("dep.emp.name : {}", department.getEmployee().getName());
-
         Employee employee = department.getEmployee();
 
-        LOGGER.info("emp.name : {} {}", employee.getName(), department);
+        LOGGER.info("resp : {}", responseEntity);
+        LOGGER.info("responseEntity.body.name : {}", responseEntity.getBody().getEmployee().getName());
+        LOGGER.info("dep.emp.name : {} {} {}", department.getEmployee().getName(), employee.getName(), department);
     }
 
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity() {

@@ -9,6 +9,7 @@ public class LoggerParam {
 
     private CtElement ctElement;
     private String ctShortDesc;
+
     private boolean isStringLiteral;
     private boolean isVariable;
     private boolean isSanitizationNeeded;
