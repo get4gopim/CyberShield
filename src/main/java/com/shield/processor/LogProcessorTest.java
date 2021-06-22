@@ -8,11 +8,18 @@ public class LogProcessorTest {
 
     public static void main(String[] arg) {
         final String[] args = {
-                "-i", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/com/fdc/ucom/customer/endpoint/CustomController.java",
-                "-o", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/",
+                "-i", "src/main/java/com/example/test/TestClass.java",
+                "-o", "target/spooned/",
                 "-p", "com.shield.processor.LogProcessor"//,
                 //"--compile"
         };
+
+        /*final String[] args = {
+                "-i", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/com/fdc/ucom/customer/endpoint/CustomController.java",
+                "-o", "target/spooned/",
+                "-p", "com.shield.processor.LogProcessor"//,
+                //"--compile"
+        };*/
 
         final Launcher launcher = new Launcher();
         Environment spoonEnv = launcher.getEnvironment();
