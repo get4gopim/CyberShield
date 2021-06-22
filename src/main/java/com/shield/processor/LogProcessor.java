@@ -21,11 +21,11 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
+public class LogProcessor extends AbstractProcessor<CtMethod<?>> {
 
     private static final String SANITIZE_FN_NAME = "sanitize";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MyProcessor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogProcessor.class);
 
     private static final List<Class> SPRING_PATTERN_LIST = Arrays.asList(PathVariable.class, RequestBody.class, RequestHeader.class, RequestParam.class, Header.class, Payload.class);
 
@@ -35,11 +35,11 @@ public class MyProcessor extends AbstractProcessor<CtMethod<?>> {
 
     private static final List<String> VAR_NAME_URL_PATTERN = Arrays.asList("url", "endpoint");
 
-    @Override
+    /*@Override
     public boolean isToBeProcessed(CtMethod<?> element) {
         // System.out.println(element.getType());
         return element.isPublic(); // filter only public method
-    }
+    }*/
 
     @Override
     public void process(CtMethod<?> ctMethod) {

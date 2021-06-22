@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
-public class A {
+public class TestClass {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(A.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestClass.class);
 
     public static final int waitingTime = 1000;
     private int i1;
@@ -105,6 +105,6 @@ public class A {
     }
 
     static void main(String[] args) {
-        A test = new A();
+        TestClass test = new TestClass();
     }
 }

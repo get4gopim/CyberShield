@@ -4,13 +4,13 @@ import spoon.Launcher;
 import spoon.compiler.Environment;
 import spoon.support.sniper.SniperJavaPrettyPrinter;
 
-public class MyProcessorTest {
+public class LogProcessorTest {
 
     public static void main(String[] arg) {
         final String[] args = {
                 "-i", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/com/fdc/ucom/customer/endpoint/CustomController.java",
                 "-o", "/Users/f3ol562/IdeaProjects/ucom_customer_services/uComCustomerSvcsParent/uComCustomerSvcs/src/main/java/",
-                "-p", "com.shield.processor.MyProcessor"//,
+                "-p", "com.shield.processor.LogProcessor"//,
                 //"--compile"
         };
 
