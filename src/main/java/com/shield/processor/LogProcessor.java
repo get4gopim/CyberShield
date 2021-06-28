@@ -187,6 +187,11 @@ public class LogProcessor extends AbstractProcessor<CtMethod<?>> {
                 sb.append(trace);
             }
 
+
+            if (ctElement.getShortRepresentation().contains("spoon.support.reflect.code.CtBinaryOperatorImpl")) {
+                LOGGER.info(ctElement + " :ref: " + ctElement.getDirectChildren());
+            }
+
             if (i > 1) {
                 if(LoggerParam.ctLiteralPredicate.test(ctElement)) {
                     paramList.add(new LoggerParam(ctElement, false));

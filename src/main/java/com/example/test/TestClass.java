@@ -53,7 +53,7 @@ public class TestClass {
         LOGGER.info(escapeXml(name));
 
         Employee emp1 = value.getEmployee();
-        LOGGER.info("Employee name : {} {}", value, emp1.getName());
+        LOGGER.info("Employee name : {} {} {}", name, value, emp1.getName());
 
         Department dep = empRespEntity.getBody();
         Employee emp = dep.getEmployee();
@@ -73,7 +73,7 @@ public class TestClass {
 
         LOGGER.info("resp : {}", responseEntity);
         LOGGER.info("responseEntity.body.name : {}", responseEntity.getBody().getEmployee().getName());
-        LOGGER.info("dep.emp.name : {} {} {}", department.getEmployee().getName(), employee.getName(), department);
+        LOGGER.info("dep.emp.name : {} {} " + department.getEmployee().getName(), employee.getName(), department);
     }
 
     private HttpEntity<MultiValueMap<String, String>> getRequestEntity() {
